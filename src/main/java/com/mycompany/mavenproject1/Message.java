@@ -1,8 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.mycompany.mavenproject1;
 
 import java.util.ArrayList;
@@ -43,6 +38,11 @@ public final class Message {
     private static List<String> messageHashes       = new ArrayList<>();
     private static List<String> messageIDs          = new ArrayList<>();
     private static List<String> recipientList       = new ArrayList<>();
+
+    // Parallel arrays for stored messages
+    private static List<String> storedMessageHashes    = new ArrayList<>();
+    private static List<String> storedMessageIDs       = new ArrayList<>();
+    private static List<String> storedRecipientList    = new ArrayList<>();
 
     // -------------------------------------------------------
     // CONSTRUCTORS
@@ -126,7 +126,7 @@ public final class Message {
 
     /**
      * Validates the recipient cell number format.
-     * Must start with international code (+) and be max 10 characters.
+     * Must start with international code (+) and be max 13 characters.
      * @return success or failure message String
      */
     public String checkRecipientCell() {
@@ -136,7 +136,7 @@ public final class Message {
                  + "Please correct the number and try again.";
         }
         boolean startsWithCode = recipient.startsWith("+");
-        boolean correctLength  = recipient.length() <= 10;
+        boolean correctLength  = recipient.length() <= 13;
         if (startsWithCode && correctLength) {
             return "Cell phone number successfully captured.";
         } else {
@@ -194,9 +194,10 @@ public final class Message {
                 return "Press 0 to delete the message.";
             }
             case 3 -> {
-                messageHashes.add(this.messageHash);
-                messageIDs.add(this.messageID);
-                recipientList.add(this.recipient);
+                storedMessages.add(this.messageText);
+                storedMessageHashes.add(this.messageHash);
+                storedMessageIDs.add(this.messageID);
+                storedRecipientList.add(this.recipient);
                 writeMessageToJSON();
                 return "Message successfully stored.";
             }
@@ -285,11 +286,12 @@ public final class Message {
     public static String searchByMessageID(String id) {
         for (int i = 0; i < messageIDs.size(); i++) {
             if (messageIDs.get(i).equals(id)) {
-                if (i < sentMessages.size()) {
-                    return sentMessages.get(i);
-                } else {
-                    return storedMessages.get(i - sentMessages.size());
-                }
+                return sentMessages.get(i);
+            }
+        }
+        for (int i = 0; i < storedMessageIDs.size(); i++) {
+            if (storedMessageIDs.get(i).equals(id)) {
+                return storedMessages.get(i);
             }
         }
         return "Message not found.";
@@ -308,11 +310,12 @@ public final class Message {
         StringBuilder results = new StringBuilder();
         for (int i = 0; i < recipientList.size(); i++) {
             if (recipientList.get(i) != null && recipientList.get(i).equals(recipient)) {
-                if (i < sentMessages.size()) {
-                    results.append(sentMessages.get(i)).append("\n");
-                } else {
-                    results.append(storedMessages.get(i - sentMessages.size())).append("\n");
-                }
+                results.append(sentMessages.get(i)).append("\n");
+            }
+        }
+        for (int i = 0; i < storedRecipientList.size(); i++) {
+            if (storedRecipientList.get(i) != null && storedRecipientList.get(i).equals(recipient)) {
+                results.append(storedMessages.get(i)).append("\n");
             }
         }
         if (results.length() == 0) {
@@ -333,18 +336,21 @@ public final class Message {
     public static String deleteByHash(String hash) {
         for (int i = 0; i < messageHashes.size(); i++) {
             if (messageHashes.get(i).equals(hash)) {
-                String deletedText = "";
-                if (i < sentMessages.size()) {
-                    deletedText = sentMessages.get(i);
-                    sentMessages.remove(i);
-                } else {
-                    int storedIndex = i - sentMessages.size();
-                    deletedText = storedMessages.get(storedIndex);
-                    storedMessages.remove(storedIndex);
-                }
+                String deletedText = sentMessages.get(i);
+                sentMessages.remove(i);
                 messageHashes.remove(i);
                 messageIDs.remove(i);
                 recipientList.remove(i);
+                return "Message: " + deletedText + " successfully deleted.";
+            }
+        }
+        for (int i = 0; i < storedMessageHashes.size(); i++) {
+            if (storedMessageHashes.get(i).equals(hash)) {
+                String deletedText = storedMessages.get(i);
+                storedMessages.remove(i);
+                storedMessageHashes.remove(i);
+                storedMessageIDs.remove(i);
+                storedRecipientList.remove(i);
                 return "Message: " + deletedText + " successfully deleted.";
             }
         }
@@ -419,6 +425,9 @@ public final class Message {
         messageHashes.clear();
         messageIDs.clear();
         recipientList.clear();
+        storedMessageHashes.clear();
+        storedMessageIDs.clear();
+        storedRecipientList.clear();
     }
 
     // -------------------------------------------------------
